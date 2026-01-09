@@ -1,0 +1,28 @@
+providers:
+  openai:
+    base_url: https://api.openai.com
+    api_key: OPENAI_API_KEY
+    allowed_models: ["*"]
+
+  anthropic:
+    base_url: https://api.anthropic.com
+    api_key: ANTHROPIC_API_KEY
+    allowed_models: ["*"]
+
+gateway_keys:
+  gw_user_alice:
+    owner: alice
+    providers: ["openai"]
+    models: ["gpt-4.1", "gpt-4.1-mini"]
+    expires_at: "2026-01-01T00:00:00Z"
+
+  gw_user_bob:
+    owner: bob
+    providers: ["openai", "anthropic"]
+    models: ["*"]
+    expires_at: null
+
+  gw_internal_ci:
+    owner: ci
+    providers: ["openai"]
+    models: ["gpt-4.1-mini"]
