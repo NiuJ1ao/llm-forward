@@ -97,7 +97,7 @@ def usage_dashboard():
         col4.metric("Error rate", "n/a")
 
     st.subheader("Requests over time")
-    df_ts = df.set_index("ts").resample("1H").size()
+    df_ts = df.set_index("ts").resample("1h").size()
     st.line_chart(df_ts)
 
     st.subheader("Raw events")

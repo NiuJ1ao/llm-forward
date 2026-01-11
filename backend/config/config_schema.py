@@ -31,7 +31,7 @@ class GatewayKeyModel(BaseModel):
 class GatewayConfigModel(BaseModel):
     providers: Dict[str, ProviderConfigModel]
     gateway_keys: Dict[str, GatewayKeyModel]
-    
+
     @model_validator(mode="after")
     def validate_references(self):
         errors: list[str] = []
@@ -60,7 +60,7 @@ class GatewayConfigModel(BaseModel):
                             f"gateway_keys.{key_name}: model '{model}' "
                             f"not allowed by provider '{provider}'"
                         )
-                        
+
         if errors:
             raise ValueError("Invalid gateway configuration:\n" + "\n".join(errors))
 

@@ -217,3 +217,5 @@ __marimo__/
 .streamlit/secrets.toml
 
 config.yaml
+usage/
+usage_parquet/

@@ -1,4 +1,4 @@
-import time
+from time import time
 import json
 import aiohttp
 from fastapi import Request
@@ -36,7 +36,10 @@ async def forward_request(
     }
     headers["Authorization"] = f"Bearer {provider_api_key}"
 
-    session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=None))
+    session = aiohttp.ClientSession(
+        timeout=aiohttp.ClientTimeout(total=None),
+        auto_decompress=False,
+    )
 
     # 🔀 NON-STREAMING: buffer once, parse usage
     if not getattr(request.state, "stream", False):
