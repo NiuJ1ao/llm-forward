@@ -97,12 +97,12 @@ def key_editor():
         if selected == "<new>":
             key = st.text_input(
                 "Gateway key",
-                placeholder="sk_live_...",
+                placeholder="fk-...",
                 key=f"gateway_key_{selected}",
             )
             owner = st.text_input(
                 "Owner",
-                placeholder="team@company.com",
+                placeholder="alice",
                 key=f"owner_{selected}",
             )
             allowed_providers = st.multiselect(
@@ -178,7 +178,9 @@ def key_editor():
             st.info("Select providers to see available models.")
 
         models_key = f"models_{selected}"
-        current_models = st.session_state.get(models_key, default_models)
+        if models_key not in st.session_state:
+            st.session_state[models_key] = default_models
+        current_models = st.session_state[models_key]
         if current_models:
             if "*" in current_models and not wildcard_available:
                 current_models = [m for m in current_models if m != "*"]
@@ -188,7 +190,6 @@ def key_editor():
         selected_models = st.multiselect(
             "Models",
             model_options,
-            default=default_models,
             help="Models are limited to the selected providers.",
             disabled=not model_options,
             key=models_key,
