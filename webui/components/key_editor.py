@@ -187,6 +187,16 @@ def key_editor():
             current_models = [m for m in current_models if m in valid_model_options]
             st.session_state[models_key] = current_models
 
+        select_all_models_key = f"select_all_models_{selected}"
+        if st.button(
+            "Select all models",
+            disabled=not model_options,
+            key=select_all_models_key,
+        ):
+            st.session_state[models_key] = (
+                ["*"] if wildcard_available else list(valid_model_options)
+            )
+
         selected_models = st.multiselect(
             "Models",
             model_options,
