@@ -98,38 +98,46 @@ async def forward_request(
 
     async def stream(resp):
         nonlocal bytes_out
-        async for chunk in resp.content.iter_any():
-            bytes_out += len(chunk)
-            yield chunk
+        try:
+            async for chunk in resp.content.iter_any():
+                bytes_out += len(chunk)
+                yield chunk
+        except aiohttp.ClientConnectionError:
+            # Upstream closed mid-stream; treat as EOF to avoid noisy TaskGroup errors.
+            pass
+        finally:
+            duration_ms = int((time() - start) * 1000)
 
-        duration_ms = int((time() - start) * 1000)
-
-        await USAGE_SINK.record(
-            UsageRecord(
-                timestamp=time(),
-                owner=request.state.owner,
-                provider=request.path_params["provider"],
-                model=request.state.model,
-                status_code=resp.status,
-                duration_ms=duration_ms,
-                bytes_in=bytes_in,
-                bytes_out=bytes_out,
-                prompt_tokens=None,
-                completion_tokens=None,
-                total_tokens=None,
+            await USAGE_SINK.record(
+                UsageRecord(
+                    timestamp=time(),
+                    owner=request.state.owner,
+                    provider=request.path_params["provider"],
+                    model=request.state.model,
+                    status_code=resp.status,
+                    duration_ms=duration_ms,
+                    bytes_in=bytes_in,
+                    bytes_out=bytes_out,
+                    prompt_tokens=None,
+                    completion_tokens=None,
+                    total_tokens=None,
+                )
             )
-        )
-        await session.close()
+            resp.close()
+            await session.close()
 
-    async with session.request(
+
+    resp = await session.request(
         method=request.method,
         url=target_url,
         headers=headers,
         params=request.query_params,
-        data=body,
-    ) as resp:
-        return StreamingResponse(
-            stream(resp),
-            status_code=resp.status,
-            headers=dict(resp.headers),
-        )
+        data=body
+    )
+    
+    return StreamingResponse(
+        stream(resp),
+        status_code=resp.status,
+        headers=dict(resp.headers),
+        media_type=resp.headers.get("content-type")
+    )
