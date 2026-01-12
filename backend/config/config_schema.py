@@ -38,6 +38,9 @@ class GatewayConfigModel(BaseModel):
 
         # ---- validate gateway keys ----
         for key_name, key in self.gateway_keys.items():
+            # Allow models if they are valid for at least one listed provider.
+            key_allows_all_models = "*" in key.models
+            model_allowed_by_any_provider = {m: False for m in key.models}
             # provider existence
             for provider in key.providers:
                 if provider not in self.providers:
@@ -50,15 +53,21 @@ class GatewayConfigModel(BaseModel):
                 provider_models = provider_cfg.allowed_models
 
                 # wildcard short-circuit
-                if "*" in key.models or "*" in provider_models:
+                if key_allows_all_models or "*" in provider_models:
                     continue
 
-                # model compatibility
+                # model compatibility: mark models allowed by any provider
                 for model in key.models:
-                    if model not in provider_models:
+                    if model in provider_models:
+                        model_allowed_by_any_provider[model] = True
+
+            # after checking providers, fail only models unsupported by all providers
+            if not key_allows_all_models:
+                for model, allowed in model_allowed_by_any_provider.items():
+                    if not allowed:
                         errors.append(
                             f"gateway_keys.{key_name}: model '{model}' "
-                            f"not allowed by provider '{provider}'"
+                            f"not allowed by any configured provider"
                         )
 
         if errors:
